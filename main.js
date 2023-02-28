@@ -18,7 +18,7 @@ setInterval(mainLoop,12)
 
 function sgn(num)
 {
-    return num > 0 ? 1 : -1;
+    return num >= 0 ? 1 : -1;
 }
 
 function drawBox(x,y)
@@ -45,9 +45,12 @@ function applyVelocity()
             velocity = velocity > 0 ? velocity* 0.9 : 0;
         }
     let counterForce = touchingTheGround * -1*(yVelocity);
-    
+    console.log(velocity)
+    console.log(sgn(horizontalDirection))
     y += yVelocity + counterForce;
-    x += sgn(horizontalDirection)*velocity;
+    if(horizontalDirection)
+        x += sgn(horizontalDirection)*velocity;
+    
 }
 
 function mainLoop()
@@ -69,7 +72,7 @@ function userInput(event)
     if(event.key == 'ArrowRight')
         horizontalDirection = 1;
     else  if( event.key == 'ArrowLeft')
-        horizontalDirection = -1
+        horizontalDirection = -1;
     else if (touchingTheGround && event.key == " ")
     {
         y -= 20;
