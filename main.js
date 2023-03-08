@@ -18,7 +18,7 @@ document.getElementById("fricVal").textContent = friction;
 document.getElementById('friction').value = friction*100;
 document.getElementById("termVal").textContent = terminal_velocity_x;
 document.getElementById('terminal').value = terminal_velocity_x*5;
-
+let acceleration = 12;
 setInterval(mainLoop,12)
 
 class Box {
@@ -79,8 +79,6 @@ class Point {
     }
 }
 
-
-
 class Plattform {
     constructor(x,y,w,h){
         this.x = x;
@@ -123,11 +121,13 @@ function applyVelocity(player)
 {
     if(player.grounded)
         {
-            player.velocity += horizontalDirection*3 % terminal_velocity_x;
+            player.velocity += horizontalDirection*acceleration % terminal_velocity_x;
             player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* friction : 0;
         }
     else {
-        player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* 0.98 : 0;
+        player.velocity += horizontalDirection*(acceleration*0.5) % terminal_velocity_x;
+
+        player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* friction : 0;
     }
     let counterForce = player.grounded * -1*(player.yVelocity);
     
@@ -206,6 +206,12 @@ function updateParameter(parName)
         terminal_velocity_x = value / 5;
         document.getElementById("termVal").textContent = terminal_velocity_x;
     }
+    else if(parName === "acceleration")
+    {
+        var value = document.getElementById("acceleration").value;
+        acceleration = value /3;
+        document.getElementById("accelVal").textContent = acceleration.toFixed(2);
+    }
 }
 
 function mainLoop()
@@ -222,7 +228,6 @@ function mainLoop()
         drawBox(element.x,element.y,element.w,element.h,"#f0af33");
         element.move();
     });
-
 }
 
 function userInput(event) 
