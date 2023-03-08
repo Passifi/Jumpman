@@ -8,12 +8,16 @@ const screen = document.getElementById("screen");
 let touchingTheGround = false;
 const ctx = screen.getContext("2d");
 const GRAVITY = 1; 
-let terminal_velocity_x = 20;
+let terminal_velocity_x = 11.2;
 let terminal_velocity_y = 20;
 let x,y;
 const SCREEN_WIDTH = screen.width;
 const SCREEN_HEIGH = screen.height;
-let friction = 0.96;
+let friction = 0.84;
+document.getElementById("fricVal").textContent = friction;
+document.getElementById('friction').value = friction*100;
+document.getElementById("termVal").textContent = terminal_velocity_x;
+document.getElementById('terminal').value = terminal_velocity_x*5;
 
 setInterval(mainLoop,12)
 
