@@ -13,10 +13,6 @@ let terminal_velocity_y = 20;
 let x,y;
 const SCREEN_WIDTH = screen.width;
 const SCREEN_HEIGH = screen.height;
-x=20;
-y=20;
-velocity = 0;
-yVelocity = 0;
 let friction = 0.96;
 
 setInterval(mainLoop,12)
@@ -96,7 +92,7 @@ class Plattform {
         
     }
 }
-let player = new Player(20,20,40,40,"#ff0f0");
+let player = new Player(20,20,40,40,"#ff0f00");
 var plattforms = [];
 plattforms.push(new Plattform(12,300,90,10));
 
@@ -128,7 +124,6 @@ function applyVelocity(player)
         }
     else {
         player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* 0.98 : 0;
-
     }
     let counterForce = player.grounded * -1*(player.yVelocity);
     
@@ -175,9 +170,12 @@ function collisionDetection()
         const element = plattforms[i];
         pattformBox = new Box(element.x,element.y,element.w,element.h);
         collisionDetected = centerPointMethod(player.box,pattformBox);
+        if(player.yVelocity > 0)
+            player.grounded = collisionDetected;
         if(collisionDetected)
         {
-            player.yVelocity *= -1;
+
+            player.yVelocity *= -0.7;
         }
         
         if(collisionDetected)
@@ -185,13 +183,8 @@ function collisionDetection()
 
     }
 
-    player.grounded = collisionDetected;
-
     if(player.y >= screen.height- player.height)
         player.grounded = true;
-    
-        
-            
 }
 
 function updateParameter(parName)
@@ -206,7 +199,7 @@ function updateParameter(parName)
     else if(parName === "terminal")
     {
         var value = document.getElementById("terminal").value;
-        terminal_velocity_x = value /5 ;
+        terminal_velocity_x = value / 5;
         document.getElementById("termVal").textContent = terminal_velocity_x;
     }
 }
@@ -219,7 +212,6 @@ function mainLoop()
     
     applyGravity(player);
     applyVelocity(player);
-
     
     drawBox(player.x,player.y,player.width,player.height,"#f303a3"); 
     plattforms.forEach(element => {
