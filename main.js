@@ -8,7 +8,8 @@ const screen = document.getElementById("screen");
 let touchingTheGround = false;
 const ctx = screen.getContext("2d");
 const GRAVITY = 1; 
-const TERMINAL_VELOCITY = 20;
+let terminal_velocity_x = 20;
+let terminal_velocity_y = 20;
 let x,y;
 const SCREEN_WIDTH = screen.width;
 const SCREEN_HEIGH = screen.height;
@@ -16,7 +17,7 @@ x=20;
 y=20;
 velocity = 0;
 yVelocity = 0;
-
+let friction = 0.96;
 
 setInterval(mainLoop,12)
 
@@ -104,27 +105,26 @@ function sgn(num)
     return num >= 0 ? 1 : -1;
 }
 
-function drawBox(x,y,w=player.width,h=player.height,color="#0f0")
+function drawBox(x,y,w=player.width,h=player.height,color)
 {
-    ctx.beginPath();
+    let orgColor = ctx.fillStyle;
     ctx.fillStyle = color;
-    ctx.rect(x,y,w,h);
-    ctx.fill();
-    ctx.closePath();
+    ctx.fillRect(x,y,w,h);
+    ctx.fillStyle = orgColor;
 }
 
 function applyGravity(physObj)
 {
     physObj.yVelocity += GRAVITY;
-    physObj.yVelocity = sgn(physObj.yVelocity)*(Math.abs(physObj.yVelocity)%TERMINAL_VELOCITY);
+    physObj.yVelocity = sgn(physObj.yVelocity)*(Math.abs(physObj.yVelocity)%terminal_velocity_y);
 }
 
 function applyVelocity(player)
 {
     if(player.grounded)
         {
-            player.velocity += horizontalDirection*3 % TERMINAL_VELOCITY;
-            player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* 0.96 : 0;
+            player.velocity += horizontalDirection*3 % terminal_velocity_x;
+            player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* friction : 0;
         }
     else {
         player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* 0.98 : 0;
@@ -166,7 +166,7 @@ function collisionDetection()
     {
         xDelta = player.x < 0 ? Math.abs(player.x) : player.x+40 - screen.width;
         player.velocity *= 0.92 * -1;
-        player.x += sgn(velocity)*xDelta;
+        player.x += sgn(player.velocity)*xDelta;
     }
     let collisionDetected = false;
     player.updateCollisionBox();
@@ -194,6 +194,23 @@ function collisionDetection()
             
 }
 
+function updateParameter(parName)
+{
+    if(parName === "friction")
+    {
+        var value = document.getElementById("friction").value;
+        friction = value / 100;
+        document.getElementById("fricVal").textContent = friction;
+        
+    }
+    else if(parName === "terminal")
+    {
+        var value = document.getElementById("terminal").value;
+        terminal_velocity_x = value /5 ;
+        document.getElementById("termVal").textContent = terminal_velocity_x;
+    }
+}
+
 function mainLoop()
 {
     ctx.clearRect(0,0,screen.width,screen.height);
@@ -204,9 +221,9 @@ function mainLoop()
     applyVelocity(player);
 
     
-    drawBox(player.x,player.y,player.width,player.height,player.color); 
+    drawBox(player.x,player.y,player.width,player.height,"#f303a3"); 
     plattforms.forEach(element => {
-        drawBox(element.x,element.y,element.w,element.h);
+        drawBox(element.x,element.y,element.w,element.h,"#f0af33");
         element.move();
     });
 
