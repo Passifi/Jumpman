@@ -7,19 +7,21 @@ let horizontalDirection = 0;
 const screen = document.getElementById("screen");
 let touchingTheGround = false;
 const ctx = screen.getContext("2d");
-const GRAVITY = 1; 
+const GRAVITY = 0.7; 
 let terminal_velocity_x = 11.2;
 let terminal_velocity_y = 20;
 let x,y;
 const SCREEN_WIDTH = screen.width;
 const SCREEN_HEIGH = screen.height;
 let friction = 0.84;
+let jumpCounter =0;
 document.getElementById("fricVal").textContent = friction;
 document.getElementById('friction').value = friction*100;
 document.getElementById("termVal").textContent = terminal_velocity_x;
 document.getElementById('terminal').value = terminal_velocity_x*5;
 let acceleration = 12;
-setInterval(mainLoop,12)
+let jump = false;
+setInterval(mainLoop,1)
 
 class Box {
     constructor(x,y,width,height)
@@ -124,7 +126,8 @@ function applyGravity(physObj)
     physObj.yVelocity += GRAVITY;
     physObj.yVelocity = sgn(physObj.yVelocity)*(Math.abs(physObj.yVelocity)%terminal_velocity_y);
     let counterForce = physObj.grounded * -1*(physObj.yVelocity);
-    physObj.yVelocity += counterForce;
+    if(counterForce)
+        physObj.yVelocity = 0;
     
 }
 
@@ -141,7 +144,7 @@ function applyVelocity(player)
             player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* friction : 0;
         }
     else {
-        player.velocity += horizontalDirection*(acceleration*0.5) % terminal_velocity_x;
+        player.velocity += horizontalDirection*acceleration % terminal_velocity_x;
 
         player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* friction : 0;
     }
@@ -181,6 +184,7 @@ function centerPointMethod(box1, box2)
 
 function collisionDetection() 
 {
+    player.grounded = false;
     if(player.x < 0 || player.x + 40 > screen.width)
     {
         xDelta = player.x < 0 ? Math.abs(player.x) : player.x+40 - screen.width;
@@ -189,16 +193,18 @@ function collisionDetection()
     }
     let collisionDetected = false;
     player.updateCollisionBox();
-    if(player.y >= screen.height- player.height)
+    if(player.y > screen.height- player.height)
     {
         player.grounded = true;
         player.y = screen.height-player.height;
+        return;
     }
     for (let i = 0; i < plattforms.length; i++) {
         const element = plattforms[i];
+        element.updateBox();
         let pattformBox = element.box;
         collisionDetected = centerPointMethod(player.box,pattformBox);
-        if(player.yVelocity > 0)
+        if(player.y < element.y)
             {
             player.grounded = collisionDetected;
             
@@ -242,7 +248,15 @@ function mainLoop()
 {
     ctx.clearRect(0,0,screen.width,screen.height);
     // apply gravity 
+
     collisionDetection();
+    if(jump)
+    {
+        player.y -= 15;
+        player.yVelocity = -34;
+        player.grounded = false;
+        jump = false;
+    }
     applyGravity(player);
     applyVelocity(player);
    
@@ -262,10 +276,9 @@ function userInput(event)
        horizontalDirection =-1;
     else if (player.grounded && event.key == " ")
     {
-        player.y -= 20;
-        player.yVelocity = -100;
-        player.grounded = false;
+        jump = true;
     }
+    
 }
 
 function stopInput(event)
@@ -274,4 +287,5 @@ function stopInput(event)
     {
         horizontalDirection = 0;
     }
+    
 }
