@@ -153,6 +153,23 @@ function applyVelocity(player)
     player.x += player.velocity;
 }
 
+function jumpUp()
+{
+    if(true)
+    {
+        player.grounded = false;
+        player.y -= 10;
+        player.yVelocity = -20;
+        jumpCounter = 0;
+    }
+    else {
+        if(jumpCounter < 10)
+        {
+            player.yVelocity *=1.1;
+        }
+    }
+}
+
 function pointInside(point, box)
 {
     if(point.x > box.leftBoundary && point.x < box.rightBoundary)
@@ -250,13 +267,7 @@ function mainLoop()
     // apply gravity 
 
     collisionDetection();
-    if(jump)
-    {
-        player.y -= 15;
-        player.yVelocity = -34;
-        player.grounded = false;
-        jump = false;
-    }
+    
     applyGravity(player);
     applyVelocity(player);
    
@@ -274,10 +285,12 @@ function userInput(event)
         horizontalDirection = 1
     else  if( event.key == 'ArrowLeft')
        horizontalDirection =-1;
-    else if (player.grounded && event.key == " ")
+    else if (event.key == " ")
     {
-        jump = true;
+        console.log("Jump");
+        jumpUp();
     }
+    
     
 }
 
