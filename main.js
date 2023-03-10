@@ -9,7 +9,7 @@ let touchingTheGround = false;
 const ctx = screen.getContext("2d");
 const GRAVITY = 0.7; 
 let terminal_velocity_x = 11.2;
-let terminal_velocity_y = 20;
+let terminal_velocity_y = 152;
 let x,y;
 const SCREEN_WIDTH = screen.width;
 const SCREEN_HEIGH = screen.height;
@@ -106,7 +106,7 @@ class Plattform {
 }
 let player = new Player(20,20,40,40,"#ff0f00");
 var plattforms = [];
-plattforms.push(new Plattform(12,300,90,10));
+plattforms.push(new Plattform(12,400,90,10));
 
 function sgn(num)
 {
@@ -123,11 +123,11 @@ function drawBox(x,y,w=player.width,h=player.height,color)
 
 function applyGravity(physObj)
 {
+    if(!player.grounded)
+    {
     physObj.yVelocity += GRAVITY;
-    physObj.yVelocity = sgn(physObj.yVelocity)*(Math.abs(physObj.yVelocity)%terminal_velocity_y);
-    let counterForce = physObj.grounded * -1*(physObj.yVelocity);
-    if(counterForce)
-        physObj.yVelocity = 0;
+    physObj.yVelocity = Math.abs(physObj.yVelocity) >= Math.abs(terminal_velocity_y) ? terminal_velocity_y : physObj.yVelocity;  
+    }
     
 }
 
@@ -155,17 +155,18 @@ function applyVelocity(player)
 
 function jumpUp()
 {
-    if(true)
+    
+    if(player.grounded)
     {
         player.grounded = false;
-        player.y -= 10;
-        player.yVelocity = -20;
+        player.yVelocity = -16.3;
         jumpCounter = 0;
     }
     else {
-        if(jumpCounter < 10)
+        if(false)
         {
-            player.yVelocity *=1.1;
+            jumpCounter++;
+            player.yVelocity -=12;
         }
     }
 }
@@ -265,11 +266,12 @@ function mainLoop()
 {
     ctx.clearRect(0,0,screen.width,screen.height);
     // apply gravity 
-
-    collisionDetection();
-    
     applyGravity(player);
     applyVelocity(player);
+    collisionDetection();
+    
+    
+    
    
     
     drawBox(player.x,player.y,player.width,player.height,"#f303a3"); 
@@ -287,8 +289,11 @@ function userInput(event)
        horizontalDirection =-1;
     else if (event.key == " ")
     {
-        console.log("Jump");
-        jumpUp();
+        if(!jump)
+        {
+            jump = true;
+            jumpUp();
+        }
     }
     
     
@@ -299,6 +304,10 @@ function stopInput(event)
     if(event.key == 'ArrowRight' || event.key == 'ArrowLeft')
     {
         horizontalDirection = 0;
+    }
+    else if(event.key == " ")
+    {
+        jump = false;
     }
     
 }
