@@ -107,6 +107,10 @@ class Plattform {
 let player = new Player(20,20,40,40,"#ff0f00");
 var plattforms = [];
 plattforms.push(new Plattform(12,400,90,10));
+plattforms.push(new Plattform(92,300,90,10));
+plattforms.push(new Plattform(120,200,90,10));
+plattforms.push(new Plattform(180,100,90,10));
+
 
 function sgn(num)
 {
@@ -200,9 +204,20 @@ function centerPointMethod(box1, box2)
     return false;
 }
 
+function bottomCollide(player, plattform)
+{
+    if(player.y > plattform.h + plattform.y)
+        return 1;
+    let overlap = plattform.y - (player.y + player.height);
+    console.log(overlap);
+    if (overlap <= 0)
+        return overlap;
+    else 
+        return 0;
+}
+
 function collisionDetection() 
 {
-    player.grounded = false;
     if(player.x < 0 || player.x + 40 > screen.width)
     {
         xDelta = player.x < 0 ? Math.abs(player.x) : player.x+40 - screen.width;
@@ -222,20 +237,25 @@ function collisionDetection()
         element.updateBox();
         let pattformBox = element.box;
         collisionDetected = centerPointMethod(player.box,pattformBox);
-        if(player.y < element.y)
-            {
-            player.grounded = collisionDetected;
-            
-            }
         
         if(collisionDetected)
         {
+            let over = bottomCollide(player,element);
+            if (over <= 0)
+            {
+                player.grounded = true;
+                player.y += over; 
+            }
+            else 
+            {
+                player.yVelocity *= -0.9;
+            }
             return true;
         }
 
-        return false;
     }
 
+    return false;
     
 }
 
