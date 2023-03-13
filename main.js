@@ -82,11 +82,12 @@ class Point {
 }
 
 class Plattform {
-    constructor(x,y,w,h){
+    constructor(x,y,w,h,speed){
         this.x = x;
         this.y = y;
         this.w = w;
         this.h = h;
+        this.speed = speed;
         this.box = new Box(x,y,w,h);
     }
 
@@ -98,18 +99,19 @@ class Plattform {
     }
 
     move() {
-        this.x += 3;
+        this.x += this.speed;
         if(this.x > SCREEN_WIDTH)
             this.x = 0;
+        else if(this.x < 0)
+            this.x = SCREEN_WIDTH;
         
     }
 }
 let player = new Player(20,20,40,40,"#ff0f00");
 var plattforms = [];
-plattforms.push(new Plattform(12,400,90,10));
-plattforms.push(new Plattform(92,300,90,10));
-plattforms.push(new Plattform(120,200,90,10));
-plattforms.push(new Plattform(180,100,90,10));
+plattforms.push(new Plattform(12,340,90,10,-2));
+
+plattforms.push(new Plattform(120,200,90,10,1));
 
 
 function sgn(num)
