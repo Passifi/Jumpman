@@ -169,10 +169,10 @@ function jumpUp()
         jumpCounter = 0;
     }
     else {
-        if(false)
+        if(jumpCounter < 4)
         {
             jumpCounter++;
-            player.yVelocity -=12;
+            player.yVelocity -=1;
         }
     }
 }
