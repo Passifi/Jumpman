@@ -9,7 +9,7 @@ let touchingTheGround = false;
 const ctx = screen.getContext("2d");
 const GRAVITY = 0.7; 
 let terminal_velocity_x = 11.2;
-let terminal_velocity_y = 152;
+let terminal_velocity_y = 1;
 let x,y;
 const SCREEN_WIDTH = screen.width;
 const SCREEN_HEIGH = screen.height;
@@ -21,36 +21,31 @@ document.getElementById("termVal").textContent = terminal_velocity_x;
 document.getElementById('terminal').value = terminal_velocity_x*5;
 let acceleration = 12;
 let jump = false;
-setInterval(mainLoop,1)
 
-class Box {
+
+class HitBox {
     constructor(x,y,width,height)
     {
-        this.leftBoundary = x;
-        this.topBoundary = y;
-        this.rightBoundary = x + width;
-        this.bottomBoundary = y+height;
-        this.width = width/2;
-        this.height = height/2;
-        this.centerPoint = new Point(x + width/2, y + height/2);
+        this.x = x;
+        this.y = y;
+        this.w = width;
+        this.h = height;
     }
 
-    returnPoints()
-    {
-        let pointArray = [];
-        pointArray.push(new Point(this.leftBoundary, this.topBoundary));
-        pointArray.push(new Point(this.rightBoundary, this.topBoundary));
-        pointArray.push(new Point(this.leftBoundary, this.bottomBoundary));
-        pointArray.push(new Point(this.rightBoundary, this.bottomBoundary));
-        return pointArray;
-    }
-
-    updateCenter()
-    {
-        this.centerPoint = new Point(this.x + this.width/2, this.y + this.height/2);
-    }
+    
 }
 
+class Velocity
+{
+    constructor(x=0,y=0)
+    {
+        this.x = x;
+        this.y = y;
+    }
+
+
+
+}
 class Player {
         constructor(x,y,width,height,color)
         {
@@ -59,18 +54,18 @@ class Player {
             this.width  = width;
             this.height = height;
             this.color = color;
-            this.velocity = 0;
-            this.yVelocity = 0;
+            this.velocity = new Velocity();
             this.grounded = false;
-            this.box = new Box(this.x,this.y,width,height);
+            this.box = new HitBox(this.x,this.y,width,height);
+            
         }
-
-        updateCollisionBox()
-        {
-            this.box.x = this.x;
-            this.box.y = this.y;
-            this.box.updateCenter();
-        }
+    
+    applyVelocity() {
+        this.x += this.velocity.x;
+        if(!this.grounded)
+            this.y += this.velocity.y;
+    }
+        
 }
 
 class Point {
@@ -88,14 +83,7 @@ class Plattform {
         this.w = w;
         this.h = h;
         this.speed = speed;
-        this.box = new Box(x,y,w,h);
-    }
-
-    updateBox()
-    {
-        this.box.x = this.x;
-        this.box.y = this.y;
-        this.box.updateCenter();
+        this.box = new HitBox(x,y,w,h);
     }
 
     move() {
@@ -104,14 +92,19 @@ class Plattform {
             this.x = 0;
         else if(this.x < 0)
             this.x = SCREEN_WIDTH;
+        this.box.x = this.x;
+        this.box.y = this.y;
         
     }
 }
 let player = new Player(20,20,40,40,"#ff0f00");
 var plattforms = [];
+let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
 plattforms.push(new Plattform(12,340,90,10,-2));
 
 plattforms.push(new Plattform(120,200,90,10,1));
+plattforms.push(floor);
+setInterval(mainLoop,1)
 
 
 function sgn(num)
@@ -127,138 +120,30 @@ function drawBox(x,y,w=player.width,h=player.height,color)
     ctx.fillStyle = orgColor;
 }
 
-function applyGravity(physObj)
+function collision(box1, box2)
 {
-    if(!player.grounded)
-    {
-    physObj.yVelocity += GRAVITY;
-    physObj.yVelocity = Math.abs(physObj.yVelocity) >= Math.abs(terminal_velocity_y) ? terminal_velocity_y : physObj.yVelocity;  
-    }
-    
+    console.log(box1);
+    console.log(box2);
+    return (box1.x < box2.x + box2.w && box1.x + box1.w > box2.x && box1.y < box2.y + box2.h && box1.y + box1.h > box2.y  )
 }
 
-function ejectPlayer()
-{
-    
-}
 
-function applyVelocity(player)
-{
-    if(player.grounded)
-        {
-            player.velocity += horizontalDirection*acceleration % terminal_velocity_x;
-            player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* friction : 0;
-        }
-    else {
-        player.velocity += horizontalDirection*acceleration % terminal_velocity_x;
-
-        player.velocity = Math.abs(player.velocity) > 0 ? player.velocity* friction : 0;
-    }
-    
-    player.y += player.yVelocity;
-    player.x += player.velocity;
-}
-
-function jumpUp()
-{
-    
-    if(player.grounded)
-    {
-        player.grounded = false;
-        player.yVelocity = -16.3;
-        jumpCounter = 0;
-    }
-    else {
-        if(jumpCounter < 4)
-        {
-            jumpCounter++;
-            player.yVelocity -=1;
-        }
-    }
-}
-
-function pointInside(point, box)
-{
-    if(point.x > box.leftBoundary && point.x < box.rightBoundary)
-    {
-        if(point.y > box.topBoundary && point.y < box.bottomBoundary)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-function centerPointMethod(box1, box2)
-{
-    let centerDeltaX = Math.abs(box1.centerPoint.x - box2.centerPoint.x);
-    let centerDeltaY = Math.abs(box1.centerPoint.y - box2.centerPoint.y);
-    let maxDistanceX = box1.width + box2.width;
-    let maxDistanceY = box1.height + box2.height;
-    if(centerDeltaX <= maxDistanceX)
-    {
-        if(centerDeltaY <= maxDistanceY)
-        {
-            return true;
-        }
-
-    }
-    return false;
-}
-
-function bottomCollide(player, plattform)
-{
-    if(player.y > plattform.h + plattform.y)
-        return 1;
-    let overlap = plattform.y - (player.y + player.height);
-    console.log(overlap);
-    if (overlap <= 0)
-        return overlap;
-    else 
-        return 0;
-}
 
 function collisionDetection() 
 {
-    if(player.x < 0 || player.x + 40 > screen.width)
+    player.box.x = player.x;
+    player.box.y = player.y;
+    player.grounded = false;
+    for(let i =0; i < plattforms.length; i++)
     {
-        xDelta = player.x < 0 ? Math.abs(player.x) : player.x+40 - screen.width;
-        player.velocity *= 0.92 * -1;
-        player.x += sgn(player.velocity)*xDelta;
-    }
-    let collisionDetected = false;
-    player.updateCollisionBox();
-    if(player.y > screen.height- player.height)
-    {
-        player.grounded = true;
-        player.y = screen.height-player.height;
-        return;
-    }
-    for (let i = 0; i < plattforms.length; i++) {
-        const element = plattforms[i];
-        element.updateBox();
-        let pattformBox = element.box;
-        collisionDetected = centerPointMethod(player.box,pattformBox);
-        
-        if(collisionDetected)
+        player.grounded = collision(player.box, plattforms[i].box);
+        if(player.grounded)
         {
-            let over = bottomCollide(player,element);
-            if (over <= 0)
-            {
-                player.grounded = true;
-                player.y += over; 
-            }
-            else 
-            {
-                player.yVelocity *= -0.9;
-            }
-            return true;
+            console.log("Collided");
+            break;
         }
-
     }
 
-    return false;
-    
 }
 
 function updateParameter(parName)
@@ -284,17 +169,26 @@ function updateParameter(parName)
     }
 }
 
+function physicsEngine() 
+{
+    player.velocity.y = (player.velocity.y + 0.001) <= terminal_velocity_y ? player.velocity.y + GRAVITY : terminal_velocity_y;  
+    player.applyVelocity();
+}
+
 function mainLoop()
 {
-    ctx.clearRect(0,0,screen.width,screen.height);
     // apply gravity 
-    applyGravity(player);
-    applyVelocity(player);
+    physicsEngine();
     collisionDetection();
-    
-    
-    
-   
+
+
+    //render 
+    render();
+}
+
+function render()
+{
+    ctx.clearRect(0,0,screen.width,screen.height);
     
     drawBox(player.x,player.y,player.width,player.height,"#f303a3"); 
     plattforms.forEach(element => {
