@@ -87,6 +87,9 @@ class Plattform {
         this.h = h;
         this.speed = speed;
         this.box = new HitBox(x,y,w,h);
+        this.startX = x;
+        this.time = 0;
+        this.velocity = new Velocity();
     }
 
     move() {
@@ -99,13 +102,22 @@ class Plattform {
         this.box.y = this.y;
         
     }
+
+    oscilate() 
+    {
+        this.time = (this.time+0.01)
+        this.velocity.x =  Math.sin(this.time)*130*sgn(this.speed);
+        this.x =this.velocity.x+this.startX
+        this.box.x = this.x;
+    }
+
 }
 let player = new Player(20,20,40,40,"#ff0f00");
 var plattforms = [];
 let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
-plattforms.push(new Plattform(12,340,120,10,-2));
+plattforms.push(new Plattform(120,340,120,10,-2));
 
-plattforms.push(new Plattform(120,240,120,10,1));
+plattforms.push(new Plattform(220,240,120,10,1));
 plattforms.push(floor);
 setInterval(mainLoop,1)
 
@@ -141,7 +153,7 @@ function collisionDetection()
         player.grounded = collision(player.box, plattforms[i].box);
         if(player.grounded)
         {
-            player.x += plattforms[i].speed;
+            player.velocity.x = plattforms[i].velocity.x;
             return;
         }
     }
@@ -201,7 +213,8 @@ function render()
     drawBox(player.x,player.y,player.width,player.height,"#f303a3"); 
     plattforms.forEach(element => {
         drawBox(element.x,element.y,element.w,element.h,"#f0af33");
-        element.move();
+        if(element.speed != 0)
+        element.oscilate();
     });
 }
 function jump()
