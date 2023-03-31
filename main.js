@@ -7,9 +7,9 @@ let horizontalDirection = 0;
 const screen = document.getElementById("screen");
 let touchingTheGround = false;
 const ctx = screen.getContext("2d");
-const GRAVITY = 0.7; 
-let terminal_velocity_x = 11.2;
-let terminal_velocity_y = 1;
+const GRAVITY = 0.6; 
+let terminal_velocity_x = 4.2;
+let terminal_velocity_y = 5;
 let x,y;
 const SCREEN_WIDTH = screen.width;
 const SCREEN_HEIGH = screen.height;
@@ -19,8 +19,8 @@ document.getElementById("fricVal").textContent = friction;
 document.getElementById('friction').value = friction*100;
 document.getElementById("termVal").textContent = terminal_velocity_x;
 document.getElementById('terminal').value = terminal_velocity_x*5;
-let acceleration = 12;
-let jump = false;
+let acceleration = 2;
+let isJumping = false;
 
 
 class HitBox {
@@ -64,6 +64,9 @@ class Player {
         this.x += this.velocity.x;
         if(!this.grounded)
             this.y += this.velocity.y;
+        
+        if(Math.abs(this.velocity.x) < 0.001)
+            this.velocity.x = 0;
     }
         
 }
@@ -100,9 +103,9 @@ class Plattform {
 let player = new Player(20,20,40,40,"#ff0f00");
 var plattforms = [];
 let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
-plattforms.push(new Plattform(12,340,90,10,-2));
+plattforms.push(new Plattform(12,340,120,10,-2));
 
-plattforms.push(new Plattform(120,200,90,10,1));
+plattforms.push(new Plattform(120,240,120,10,1));
 plattforms.push(floor);
 setInterval(mainLoop,1)
 
@@ -122,8 +125,7 @@ function drawBox(x,y,w=player.width,h=player.height,color)
 
 function collision(box1, box2)
 {
-    console.log(box1);
-    console.log(box2);
+    
     return (box1.x < box2.x + box2.w && box1.x + box1.w > box2.x && box1.y < box2.y + box2.h && box1.y + box1.h > box2.y  )
 }
 
@@ -139,8 +141,8 @@ function collisionDetection()
         player.grounded = collision(player.box, plattforms[i].box);
         if(player.grounded)
         {
-            console.log("Collided");
-            break;
+            player.x += plattforms[i].speed;
+            return;
         }
     }
 
@@ -172,14 +174,20 @@ function updateParameter(parName)
 function physicsEngine() 
 {
     player.velocity.y = (player.velocity.y + 0.001) <= terminal_velocity_y ? player.velocity.y + GRAVITY : terminal_velocity_y;  
+    if(player.grounded)
+            player.velocity.x = friction*player.velocity.x
+    
+    //console.log(Math.abs((player.velocity.x + horizontalDirection*(acceleration))));
+    player.velocity.x = Math.abs((player.velocity.x + horizontalDirection*(acceleration))) <= terminal_velocity_x ? player.velocity.x + horizontalDirection*(acceleration) : terminal_velocity_x*sgn(player.velocity.x);
+    //console.log(player.velocity.x)
     player.applyVelocity();
 }
 
 function mainLoop()
 {
     // apply gravity 
-    physicsEngine();
     collisionDetection();
+    physicsEngine();
 
 
     //render 
@@ -196,6 +204,11 @@ function render()
         element.move();
     });
 }
+function jump()
+{
+    player.y -= 40;
+    player.velocity.y = -13;
+}
 
 function userInput(event) 
 {
@@ -205,14 +218,12 @@ function userInput(event)
        horizontalDirection =-1;
     else if (event.key == " ")
     {
-        if(!jump)
+        if(!isJumping)
         {
-            jump = true;
-            jumpUp();
+            isJumping = true;
+            jump();
         }
     }
-    
-    
 }
 
 function stopInput(event)
@@ -223,7 +234,7 @@ function stopInput(event)
     }
     else if(event.key == " ")
     {
-        jump = false;
+        isJumping = false;
     }
     
 }
