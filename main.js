@@ -47,9 +47,6 @@ class Velocity
         this.x = x;
         this.y = y;
     }
-
-
-
 }
 class Player {
         constructor(x,y,width,height,color)
@@ -163,18 +160,17 @@ class Controller {
         {
             movePlayer(1);
         }
-        if(this.pressJump && !this.jumped)
+        if(this.pressJump)
         {
 
             jump();
-            this.jumped = true;
         }
 
     } 
 
 
 }
-let player = new Player(20,20,40,40,"#ff0f00");
+let player = new Player(20,screen.height-60,40,40,"#ff0f00");
 var plattforms = [];
 let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
 plattforms.push(new Plattform(120,340,120,10,-2));
@@ -280,9 +276,13 @@ function render()
 }
 function jump()
 {
-    player.grounded = false;
-    player.velocity.y -=12;
-    player.velocity.y = -5;
+    if(player.grounded)
+    {
+        player.y -=42;
+        player.grounded = false;
+    }
+    else 
+        player.y -=8.3;
 }
 
 function userInput(event) 
