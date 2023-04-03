@@ -19,7 +19,7 @@ document.getElementById("fricVal").textContent = friction;
 document.getElementById('friction').value = friction*100;
 document.getElementById("termVal").textContent = terminal_velocity_x;
 document.getElementById('terminal').value = terminal_velocity_x*5;
-let acceleration = 2;
+let acceleration =3;
 let isJumping = false;
 
 
@@ -153,7 +153,6 @@ function collisionDetection()
         player.grounded = collision(player.box, plattforms[i].box);
         if(player.grounded)
         {
-            player.velocity.x = plattforms[i].velocity.x;
             return;
         }
     }
@@ -188,22 +187,20 @@ function physicsEngine()
     player.velocity.y = (player.velocity.y + 0.001) <= terminal_velocity_y ? player.velocity.y + GRAVITY : terminal_velocity_y;  
     if(player.grounded)
             player.velocity.x = friction*player.velocity.x
-    
-    //console.log(Math.abs((player.velocity.x + horizontalDirection*(acceleration))));
-    player.velocity.x = Math.abs((player.velocity.x + horizontalDirection*(acceleration))) <= terminal_velocity_x ? player.velocity.x + horizontalDirection*(acceleration) : terminal_velocity_x*sgn(player.velocity.x);
-    //console.log(player.velocity.x)
     player.applyVelocity();
 }
 
 function mainLoop()
 {
-    // apply gravity 
     collisionDetection();
     physicsEngine();
-
-
-    //render 
     render();
+}
+
+function movePlayer(direction) {
+    console.log(Math.abs((player.velocity.x + direction*(acceleration))));
+    player.velocity.x = Math.abs((player.velocity.x + direction*(acceleration))) <= terminal_velocity_x ? player.velocity.x + direction*(acceleration) : terminal_velocity_x*sgn(player.velocity.x);
+
 }
 
 function render()
@@ -226,9 +223,9 @@ function jump()
 function userInput(event) 
 {
     if(event.key == 'ArrowRight')
-        horizontalDirection = 1
+        movePlayer(1);
     else  if( event.key == 'ArrowLeft')
-       horizontalDirection =-1;
+       movePlayer(-1);
     else if (event.key == " ")
     {
         if(!isJumping)
