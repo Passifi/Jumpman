@@ -1,3 +1,8 @@
+const Inputs = {
+    LEFT: 1,
+    RIGHT: 2,
+    JUMP: 3
+}
 document.addEventListener('keydown',userInput)
 document.addEventListener('keyup', stopInput)
 const STEPSIZE = 3;
@@ -13,7 +18,7 @@ let terminal_velocity_y = 5;
 let x,y;
 const SCREEN_WIDTH = screen.width;
 const SCREEN_HEIGH = screen.height;
-let friction = 0.84;
+let friction = 0.14;
 let jumpCounter =0;
 document.getElementById("fricVal").textContent = friction;
 document.getElementById('friction').value = friction*100;
@@ -112,6 +117,63 @@ class Plattform {
     }
 
 }
+class Controller {
+    
+    constructor() {
+        this.pressLeft = false;
+        this.pressRight = false;
+        this.pressJump = false;
+        this.lastMovement = null;
+        this.jumped = false;
+    }
+
+    move(direction)
+    {
+        if(direction==Inputs.LEFT)
+        {
+            this.pressLeft = true;
+            this.pressRight = false;
+        }
+        else if(direction=Inputs.RIGHT)
+        {
+            this.pressRight = true;
+            this.pressLeft = false;
+        }
+
+    }
+
+    jump()
+    {
+        this.pressJump = true;
+    }
+
+    cancelJump() 
+    {
+        this.pressJump = false;
+        this.jumped = false;
+    }
+
+    processControls()
+    {
+        if(this.pressLeft)
+        {
+            movePlayer(-1);
+        }
+        else if(this.pressRight)
+        {
+            movePlayer(1);
+        }
+        if(this.pressJump && !this.jumped)
+        {
+
+            jump();
+            this.jumped = true;
+        }
+
+    } 
+
+
+}
 let player = new Player(20,20,40,40,"#ff0f00");
 var plattforms = [];
 let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
@@ -120,7 +182,7 @@ plattforms.push(new Plattform(120,340,120,10,-2));
 plattforms.push(new Plattform(220,240,120,10,1));
 plattforms.push(floor);
 setInterval(mainLoop,1)
-
+controller = new Controller();
 
 function sgn(num)
 {
@@ -147,6 +209,7 @@ function collisionDetection()
 {
     player.box.x = player.x;
     player.box.y = player.y;
+
     player.grounded = false;
     for(let i =0; i < plattforms.length; i++)
     {
@@ -186,7 +249,7 @@ function physicsEngine()
 {
     player.velocity.y = (player.velocity.y + 0.001) <= terminal_velocity_y ? player.velocity.y + GRAVITY : terminal_velocity_y;  
     if(player.grounded)
-            player.velocity.x = friction*player.velocity.x
+            player.velocity.x -= friction*player.velocity.x;
     player.applyVelocity();
 }
 
@@ -195,6 +258,7 @@ function mainLoop()
     collisionDetection();
     physicsEngine();
     render();
+    controller.processControls();
 }
 
 function movePlayer(direction) {
@@ -216,23 +280,20 @@ function render()
 }
 function jump()
 {
-    player.y -= 40;
-    player.velocity.y = -13;
+    player.grounded = false;
+    player.velocity.y -=12;
+    player.velocity.y = -5;
 }
 
 function userInput(event) 
 {
     if(event.key == 'ArrowRight')
-        movePlayer(1);
+        controller.move(Inputs.RIGHT);
     else  if( event.key == 'ArrowLeft')
-       movePlayer(-1);
+       controller.move(Inputs.LEFT);
     else if (event.key == " ")
     {
-        if(!isJumping)
-        {
-            isJumping = true;
-            jump();
-        }
+        controller.jump();
     }
 }
 
@@ -240,11 +301,12 @@ function stopInput(event)
 {
     if(event.key == 'ArrowRight' || event.key == 'ArrowLeft')
     {
-        horizontalDirection = 0;
+        controller.pressLeft = false;
+        controller.pressRight = false;
     }
     else if(event.key == " ")
     {
-        isJumping = false;
+        controller.cancelJump();
     }
     
 }
