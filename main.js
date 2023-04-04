@@ -199,8 +199,6 @@ function collision(box1, box2)
     return (box1.x < box2.x + box2.w && box1.x + box1.w > box2.x && box1.y < box2.y + box2.h && box1.y + box1.h > box2.y  )
 }
 
-
-
 function collisionDetection() 
 {
     player.box.x = player.x;
@@ -209,13 +207,29 @@ function collisionDetection()
     player.grounded = false;
     for(let i =0; i < plattforms.length; i++)
     {
-        player.grounded = collision(player.box, plattforms[i].box);
+        if(collision(player.box, plattforms[i].box))
+        {
+            if(player.velocity.y < 0)
+                player.velocity.y *= -1
+            else 
+                player.grounded = true;
+        }
         if(player.grounded)
         {
             return;
         }
     }
+    if(player.x <= 0)
+    {
+        player.x = 0;
+        player.velocity.x *= -2;
+    }
+    if(player.x >= screen.width - player.width)
+    {
+        player.x = screen.width - player.width;
+        player.velocity.x *= -2;
 
+    }
 }
 
 function updateParameter(parName)
@@ -243,7 +257,7 @@ function updateParameter(parName)
 
 function physicsEngine() 
 {
-    player.velocity.y = (player.velocity.y + 0.001) <= terminal_velocity_y ? player.velocity.y + GRAVITY : terminal_velocity_y;  
+    player.velocity.y = Math.abs((player.velocity.y + 0.001)) <= terminal_velocity_y ? player.velocity.y + GRAVITY : terminal_velocity_y*sgn(player.velocity.y);  
     if(player.grounded)
             player.velocity.x -= friction*player.velocity.x;
     player.applyVelocity();
@@ -258,7 +272,6 @@ function mainLoop()
 }
 
 function movePlayer(direction) {
-    console.log(Math.abs((player.velocity.x + direction*(acceleration))));
     player.velocity.x = Math.abs((player.velocity.x + direction*(acceleration))) <= terminal_velocity_x ? player.velocity.x + direction*(acceleration) : terminal_velocity_x*sgn(player.velocity.x);
 
 }
@@ -279,10 +292,13 @@ function jump()
     if(player.grounded)
     {
         player.y -=42;
+        player.velocity.y = -5;
         player.grounded = false;
     }
     else 
-        player.y -=8.3;
+    {
+        player.velocity.y -= 0.52;
+    }
 }
 
 function userInput(event) 
