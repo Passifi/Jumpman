@@ -3,6 +3,13 @@ const Inputs = {
     RIGHT: 2,
     JUMP: 3
 }
+
+const CollisionType = {
+    LEFT: 0,
+    RIGHT: 1,
+    TOP: 2,
+    BOTTOM: 3
+}
 document.addEventListener('keydown',userInput)
 document.addEventListener('keyup', stopInput)
 const STEPSIZE = 3;
@@ -199,6 +206,36 @@ function collision(box1, box2)
     return (box1.x < box2.x + box2.w && box1.x + box1.w > box2.x && box1.y < box2.y + box2.h && box1.y + box1.h > box2.y  )
 }
 
+function sideCollision(box1,box2)
+{
+    // which is bigger? 
+    let overlapLeft = Math.abs(box2.x + box2.w - box1.x);
+    let overlapRight = Math.abs(box1.x + box1.w - box2.x);
+    let overlapTop = Math.abs(box2.y + box2.h - box2.y); 
+    let overlapBottom = Math.abs(box2.y - box1.y + box1.h);
+    //console.log(`Left: ${overlapLeft} Right: ${overlapRight}`);
+    //console.log(`Top: ${overlapTop} Bottom: ${overlapBottom}`)
+
+    return minOfList(overlapLeft, overlapRight, overlapTop,overlapBottom);
+
+}
+
+function minOfList(x1,x2,x3,x4)
+{
+    let values = [x1,x2,x3,x4]
+    let index = 0
+    let smallestValue = values[0]
+    for(let i =1; i < values.length; i++)
+    {
+        if(values[i] < smallestValue)
+        {
+            index = i;
+            smallestValue = values[i];
+        }
+    }
+    return index; 
+}
+
 function collisionDetection() 
 {
     player.box.x = player.x;
@@ -209,9 +246,15 @@ function collisionDetection()
     {
         if(collision(player.box, plattforms[i].box))
         {
+            console.log(sideCollision(player.box,plattforms[i].box));
+            if(sideCollision(player.box,plattforms[i].box) == CollisionType.LEFT || sideCollision(player.box,plattforms[i].box) == CollisionType.RIGHT )
+            {
+                player.velocity.x *= -0.8;
+                continue;
+            }   
             if(player.velocity.y < 0)
                 player.velocity.y *= -1
-            else 
+            else
                 player.grounded = true;
         }
         if(player.grounded)
