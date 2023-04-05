@@ -99,6 +99,7 @@ class Plattform {
         this.startX = x;
         this.time = 0;
         this.velocity = new Velocity();
+        this.lastX = x;
     }
 
     move() {
@@ -115,8 +116,10 @@ class Plattform {
     oscilate() 
     {
         this.time = (this.time+0.01)
-        this.velocity.x =  Math.sin(this.time)*130*sgn(this.speed);
-        this.x =this.velocity.x+this.startX
+        
+        this.x =Math.sin(this.time)*130*sgn(this.speed)+this.startX
+        this.velocity.x = this.x - this.lastX;
+        this.lastX = this.x;
         this.box.x = this.x;
     }
 
@@ -259,6 +262,7 @@ function collisionDetection()
         }
         if(player.grounded)
         {
+            player.x += plattforms[i].velocity.x;
             return;
         }
     }
