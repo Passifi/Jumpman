@@ -186,6 +186,9 @@ let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
 plattforms.push(new Plattform(120,340,120,10,-2));
 
 plattforms.push(new Plattform(220,240,120,10,1));
+plattforms.push(new Plattform(500,200,5,200,0));
+plattforms.push(new Plattform(500,00,5,100,0));
+
 plattforms.push(floor);
 setInterval(mainLoop,1)
 controller = new Controller();
@@ -269,12 +272,12 @@ function collisionDetection()
     if(player.x <= 0)
     {
         player.x = 0;
-        player.velocity.x *= -2;
+        player.velocity.x *= -0.6;
     }
     if(player.x >= screen.width - player.width)
     {
         player.x = screen.width - player.width;
-        player.velocity.x *= -2;
+        player.velocity.x *= -0.6;
 
     }
 }
