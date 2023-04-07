@@ -180,7 +180,7 @@ class Controller {
 
 
 }
-let player = new Player(20,screen.height-60,40,40,"#ff0f00");
+let player = new Player(20,screen.height-200,40,40,"#ff0f00");
 var plattforms = [];
 let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
 plattforms.push(new Plattform(120,340,120,10,-2));
@@ -212,17 +212,55 @@ function collision(box1, box2)
     return (box1.x < box2.x + box2.w && box1.x + box1.w > box2.x && box1.y < box2.y + box2.h && box1.y + box1.h > box2.y  )
 }
 
+function pointIn(point, box)
+{
+    let pointOnX = (point[0] > box.x && point[0] < box.x+box.w);
+    let pointOnY = (point[1] > box.y && point[1] < box.y+box.h);
+    return pointOnX && pointOnY;
+}
+
 function sideCollision(box1,box2)
 {
     // which is bigger? 
-    let overlapLeft = Math.abs(box2.x + box2.w - box1.x);
-    let overlapRight = Math.abs(box1.x + box1.w - box2.x);
-    let overlapTop = Math.abs(box2.y + box2.h - box2.y); 
-    let overlapBottom = Math.abs(box2.y - box1.y + box1.h);
+    let lowerLeft = [box1.x,box1.y+box1.w];
+    let lowerRight = [box1.x+box1.w,box1.y+box1.w];
+    let topLeft = [box1.x,box1.y];
+    let topRight = [box1.x+box1.w,box1.y];
+    let overlapLeft = 0;
+    let overlapRight = 0;
+    let overlapTop = 0;
+    let overlapBottom = 0;
+
+    let ll = pointIn(lowerLeft,box2);
+    let lr = pointIn(lowerRight,box2);
+    let tl = pointIn(topLeft,box2);
+    let tr = pointIn(topRight,box2);
+    let bottom = ll || lr;
+    let top = tl || tr;
+    let left = ll || tl;
+    let right = tr || lr; 
+    if(bottom)
+        {
+            overlapBottom = Math.abs(box1.y+box1.h-box2.y)
+        }
+    if(top)
+    {
+        overlapTop = Math.abs(box1.y-box2.y+box2.h)
+
+    }
+    if(left)
+        overlapLeft = Math.abs(box1.x-box2.x+box2.w)
+    if(right)
+        overlapRight = Math.abs(box1.x + box1.w  - box2.w)
+    if(left && right)
+    {
+        overlapLeft = 0
+        overlapRight = 0
+    }
     //console.log(`Left: ${overlapLeft} Right: ${overlapRight}`);
     //console.log(`Top: ${overlapTop} Bottom: ${overlapBottom}`)
 
-    return minOfList(overlapLeft, overlapRight, overlapTop,overlapBottom);
+    return [overlapLeft,overlapRight,overlapTop,overlapBottom];
 
 }
 
@@ -252,12 +290,9 @@ function collisionDetection()
     {
         if(collision(player.box, plattforms[i].box))
         {
-            console.log(sideCollision(player.box,plattforms[i].box));
-            if(sideCollision(player.box,plattforms[i].box) == CollisionType.LEFT || sideCollision(player.box,plattforms[i].box) == CollisionType.RIGHT )
-            {
-                player.velocity.x *= -0.8;
-                continue;
-            }   
+            let collisions = sideCollision(player.box, plattforms[i]);
+            player.x += collisions[0] + collisions[1];
+            player.y -= collisions[2] + collisions[3];
             if(player.velocity.y < 0)
                 player.velocity.y *= -1
             else
@@ -309,7 +344,11 @@ function physicsEngine()
 {
     player.velocity.y = Math.abs((player.velocity.y + 0.001)) <= terminal_velocity_y ? player.velocity.y + GRAVITY : terminal_velocity_y*sgn(player.velocity.y);  
     if(player.grounded)
+    {
             player.velocity.x -= friction*player.velocity.x;
+            if(player.velocity.y > 0)
+                player.velocity.y =0;
+    }
     player.applyVelocity();
 }
 
