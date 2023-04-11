@@ -214,7 +214,7 @@ function collision(box1, box2)
     let topCollision = (box1.y  + box1.h > box2.y) && (box1.y + box1.h < box2.y + box2.h);
     let bottomCollision = (box1.y > box2.y ) && (box1.y < box2.y + box2.h);
     let overlap = 0
-    if((!rightCollision && !leftCollision))
+    if((!rightCollision || !leftCollision))
     {
         if(rightCollision)
         {
