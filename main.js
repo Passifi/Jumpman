@@ -208,8 +208,33 @@ function drawBox(x,y,w=player.width,h=player.height,color)
 
 function collision(box1, box2)
 {
-    
-    return (box1.x < box2.x + box2.w && box1.x + box1.w > box2.x && box1.y < box2.y + box2.h && box1.y + box1.h > box2.y  )
+    // first check whether box1 slides into box2
+    let rightCollision = (box1.x + box1.w > box2.x) && (box1.x + box1.w < box2.x + box2.w);
+    let leftCollision = (box1.x < box2.x + box2.w) && (box1.x > box2.x );
+    let topCollision = (box1.y  + box1.h > box2.y) && (box1.y + box1.h < box2.y + box2.h);
+    let bottomCollision = (box1.y > box2.y ) && (box1.y < box2.y + box2.h);
+    let overlap = 0
+    if((!rightCollision && !leftCollision))
+    {
+        if(rightCollision)
+        {
+            overlap = box1.x + box1.w - box2.x;
+            console.log(overlap);
+        }
+        else 
+        {
+            
+            overlap = box1.x - box2.x + box2.w;
+            console.log(overlap);
+        }
+    }
+    if(topCollision && (leftCollision || rightCollision))
+    {
+        
+        return [true,overlap];
+        
+    }
+
 }
 
 function pointIn(point, box)
@@ -221,46 +246,7 @@ function pointIn(point, box)
 
 function sideCollision(box1,box2)
 {
-    // which is bigger? 
-    let lowerLeft = [box1.x,box1.y+box1.w];
-    let lowerRight = [box1.x+box1.w,box1.y+box1.w];
-    let topLeft = [box1.x,box1.y];
-    let topRight = [box1.x+box1.w,box1.y];
-    let overlapLeft = 0;
-    let overlapRight = 0;
-    let overlapTop = 0;
-    let overlapBottom = 0;
-
-    let ll = pointIn(lowerLeft,box2);
-    let lr = pointIn(lowerRight,box2);
-    let tl = pointIn(topLeft,box2);
-    let tr = pointIn(topRight,box2);
-    let bottom = ll || lr;
-    let top = tl || tr;
-    let left = ll || tl;
-    let right = tr || lr; 
-    if(bottom)
-        {
-            overlapBottom = Math.abs(box1.y+box1.h-box2.y)
-        }
-    if(top)
-    {
-        overlapTop = Math.abs(box1.y-box2.y+box2.h)
-
-    }
-    if(left)
-        overlapLeft = Math.abs(box1.x-box2.x+box2.w)
-    if(right)
-        overlapRight = Math.abs(box1.x + box1.w  - box2.w)
-    if(left && right)
-    {
-        overlapLeft = 0
-        overlapRight = 0
-    }
-    //console.log(`Left: ${overlapLeft} Right: ${overlapRight}`);
-    //console.log(`Top: ${overlapTop} Bottom: ${overlapBottom}`)
-
-    return [overlapLeft,overlapRight,overlapTop,overlapBottom];
+  
 
 }
 
@@ -288,15 +274,11 @@ function collisionDetection()
     player.grounded = false;
     for(let i =0; i < plattforms.length; i++)
     {
-        if(collision(player.box, plattforms[i].box))
+        let collider = collision(player.box, plattforms[i].box)
+        if(collider)
         {
-            let collisions = sideCollision(player.box, plattforms[i]);
-            player.x += collisions[0] + collisions[1];
-            player.y -= collisions[2] + collisions[3];
-            if(player.velocity.y < 0)
-                player.velocity.y *= -1
-            else
-                player.grounded = true;
+           player.x -= collider[1];
+           player.grounded = true;
         }
         if(player.grounded)
         {
