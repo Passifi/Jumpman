@@ -219,19 +219,20 @@ function collision(box1, box2)
         if(rightCollision)
         {
             overlap = box1.x + box1.w - box2.x;
-            console.log(overlap);
         }
         else 
         {
             
-            overlap = box1.x - box2.x + box2.w;
-            console.log(overlap);
+            overlap = -1*(box1.x - box2.x + box2.w);
         }
     }
     if(topCollision && (leftCollision || rightCollision))
     {
         
-        return [true,overlap];
+        let topOver = box1.y+box1.h - box2.y;
+        if(!bottomCollision)
+            topOver = 0
+        return [true,overlap,topOver];
         
     }
 
@@ -278,7 +279,11 @@ function collisionDetection()
         if(collider)
         {
            player.x -= collider[1];
+           if(player[2] != 0)
+            {
            player.grounded = true;
+           player.y -= collider[2];
+            } 
         }
         if(player.grounded)
         {
