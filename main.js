@@ -212,25 +212,24 @@ function collision(box1, box2)
     let rightCollision = (box1.x + box1.w > box2.x) && (box1.x + box1.w < box2.x + box2.w);
     let leftCollision = (box1.x < box2.x + box2.w) && (box1.x > box2.x );
     let topCollision = (box1.y  + box1.h > box2.y) && (box1.y + box1.h < box2.y + box2.h);
-    let bottomCollision = (box1.y > box2.y ) && (box1.y < box2.y + box2.h);
+    let bottomCollision = (box1.y < box2.y + box2.h ) && (box1.y > box2.y );
     let overlap = 0
-    if((!rightCollision || !leftCollision))
+    if(!(rightCollision && leftCollision))
     {
         if(rightCollision)
         {
-            overlap = box1.x + box1.w - box2.x;
+            overlap = (box1.x + box1.w - box2.x);
         }
         else 
         {
-            
-            overlap = -1*(box1.x - box2.x + box2.w);
+            overlap = -1*( box2.x + box2.w - box1.x);
         }
     }
     if(topCollision && (leftCollision || rightCollision))
     {
         
         let topOver = box1.y+box1.h - box2.y;
-        if(!bottomCollision)
+        if(bottomCollision)
             topOver = 0
         return [true,overlap,topOver];
         
