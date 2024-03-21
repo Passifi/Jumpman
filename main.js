@@ -277,17 +277,11 @@ function collisionDetection()
         let collider = collision(player.box, plattforms[i].box)
         if(collider)
         {
-           player.x -= collider[1];
            if(player[2] != 0)
             {
-           player.grounded = true;
-           player.y -= collider[2];
+                player.grounded = true;
+                player.y -= collider[2];
             } 
-        }
-        if(player.grounded)
-        {
-            player.x += plattforms[i].velocity.x;
-            return;
         }
     }
     if(player.x <= 0)
