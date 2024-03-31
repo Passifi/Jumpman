@@ -88,6 +88,27 @@ class Point {
     }
 }
 
+class Coin {
+
+
+  constructor(x,y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  draw() {
+    let orgColor = ctx.fillStyle;
+    ctx.fillStyle = "#fe003a";
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 40, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.fill();
+    ctx.fillStyle = orgColor;
+} 
+  }
+
+
+
 class Plattform {
     constructor(x,y,w,h,speed){
         this.x = x;
@@ -100,6 +121,8 @@ class Plattform {
         this.time = 0;
         this.velocity = new Velocity();
         this.lastX = x;
+        this.changeX = 0;
+        this.changeY = 0;
     }
 
     move() {
@@ -116,8 +139,9 @@ class Plattform {
     oscilate() 
     {
         this.time = (this.time+0.01)
-        
         this.x =Math.sin(this.time)*130*sgn(this.speed)+this.startX
+        this.changeX = this.lastX - this.x;
+
         this.velocity.x = this.x - this.lastX;
         this.lastX = this.x;
         this.box.x = this.x;
@@ -184,10 +208,10 @@ let player = new Player(20,screen.height-200,40,40,"#ff0f00");
 var plattforms = [];
 let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
 plattforms.push(new Plattform(120,screen.height-140,140,20,10,-2));
-
+let coin = new Coin(700,200);
 plattforms.push(new Plattform(220,screen.height-270,120,10,1));
-plattforms.push(new Plattform(500,200,5,200,0));
-plattforms.push(new Plattform(500,00,5,100,0));
+plattforms.push(new Plattform(720,screen.height-300,120,10,-3));
+//plattforms.push(new Plattform(500,100,5,100,0));
 
 plattforms.push(floor);
 setInterval(mainLoop,1)
@@ -239,67 +263,14 @@ function collision(box1, box2)
 }
 
 function improvedCollision(box1,box2) {
-  // do they collide? 
-  
-  if((box1.x > box2.x && box1.x < box2.x+box2.w) || (box1.x+box1.w > box2.x && box1.x + box1.w < box2.x +box2.w ))
-  {
-    if((box1.y > box2.y && box1.y < box2.y+box2.h) || (box1.y+box1.h > box2.y && box1.y + box1.h < box2.x +box2.h )) {
-      let topleft = [box1.x, box1.y];
-      let topRight = [box1.x+box1.w, box1.y];
-      let bottomLeft = [box1.x, box1.y+box1.h];
-      let bottomRight = [box1.x + box1.w, box1.y+box1.h];
-      // which is in?
-      let isIn= []
-      let sidesIn = false;
-      let leftIn = false;
-      let rightIn = false;
-      let xOffset = 0;
-      let yOffset = 0; 
-      if((topleft[0] > box2.x && topleft[0] < box2.x + box2.w) &&(topleft[1] > box2.y && topleft[1] < box2.y + box2.h)) 
-      {
-        xOffset = topleft[0] - (box2.x+box2.w);
-        yOffset = topleft[1] - (box2.y+box2.h); 
-        // is in 
-        leftIn  = true;
-      }
-      if((topRight[0] > box2.x && topRight[0] < box2.x + box2.w) &&(topRight[1] > box2.y && topRight[1] < box2.y + box2.h)) 
-      {
+ 
 
-        xOffset = topRight[0] - (box2.x);
-        yOffset = topRight[1] - (box2.y+box2.h);
-        rightIn = true; 
-      }          
+ if(box1.x < box2.x + box2.w && box1.x + box1.w > box2.x && box1.y < box2.y + box2.h && box1.y + box1.h > box2.y) {
+   return true;
+ }
 
-      sidesIn = leftIn && rightIn; 
-      if(sidesIn) {
-        xOffset = 0; 
-      }
 
-      sidesIn = false;
-      if((bottomLeft[0] > box2.x && bottomLeft[0] < box2.x + box2.w) &&(bottomLeft[1] > box2.y && bottomLeft[1] <  box2.y + box2.h)) 
-      {
-        xOffset = bottomLeft[0] - (box2.x+box2.w);
-        yOffset = bottomLeft[1] - box2.y; 
-        // is in 
-        leftIn  = true;
-      }
-      if((bottomRight[0] > box2.x && bottomRight[0] < box2.x + box2.w) &&(bottomRight[1] > box2.y && bottomRight[1] < box2.y + box2.h)) 
-      {
-
-        xOffset = bottomRight[0] - (box2.x);
-        yOffset = bottomRight[1] - box2.y;
-        rightIn = true; 
-      }          
-
-      sidesIn = leftIn && rightIn; 
-      if(sidesIn) {
-        xOffset = 0; 
-      }
-      
-      return [xOffset,yOffset]
-    }
-  }
-  return [0,0];
+  return false;
 }
 
 function minOfList(x1,x2,x3,x4)
@@ -327,20 +298,12 @@ function collisionDetection()
     for(let i =0; i < plattforms.length; i++)
     {
         let res = improvedCollision(player.box,plattforms[i].box);
-        if(res[1] != 0) {
+        if(res) {
           player.grounded = true;
           player.velocity.y = 0;
+          player.x -= plattforms[i].changeX;
         }  
          
-      if(res[0] != 0 || res[1] != 0) { 
-        console.log(`xOffset: ${res[0]}, yOffset: ${res[1]}`);
-        player.x -= res[0]
-        player.y -= res[1]
-        player.box.x = player.x;
-        player.box.y = player.y;
-        break;
-      }
-      
     }
     if(player.x <= 0)
     {
@@ -414,6 +377,7 @@ function render()
         if(element.speed != 0)
         element.oscilate();
     });
+    coin.draw();
 }
 function jump()
 {
