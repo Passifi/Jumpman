@@ -12,6 +12,8 @@ const CollisionType = {
 }
 document.addEventListener('keydown',userInput)
 document.addEventListener('keyup', stopInput)
+
+let pause = false;
 const STEPSIZE = 3;
 const JUMPHEIGHT = 120;
 const MAX_VELOCITY = 10;
@@ -73,7 +75,7 @@ class Player {
         this.x += this.velocity.x;
         if(!this.grounded)
             this.y += this.velocity.y;
-        
+         
         if(Math.abs(this.velocity.x) < 0.001)
             this.velocity.x = 0;
     }
@@ -211,7 +213,11 @@ plattforms.push(new Plattform(120,screen.height-140,140,20,10,-2));
 let coin = new Coin(700,200);
 plattforms.push(new Plattform(220,screen.height-270,120,10,1));
 plattforms.push(new Plattform(720,screen.height-300,120,10,-3));
-//plattforms.push(new Plattform(500,100,5,100,0));
+
+plattforms.push(new Plattform(500,100,5,300,0));
+plattforms.push(new Plattform(500,500,100,10,0));
+
+
 
 plattforms.push(floor);
 setInterval(mainLoop,1)
@@ -293,18 +299,43 @@ function collisionDetection()
 {
     player.box.x = player.x;
     player.box.y = player.y;
-
-    player.grounded = false;
+    let collision = false;
     for(let i =0; i < plattforms.length; i++)
     {
         let res = improvedCollision(player.box,plattforms[i].box);
-        if(res) {
+        
+         if(res) {
+          collision = true;
+          
+          if(player.velocity.x > 0) {
+            if(player.box.x + player.box.w > plattforms[i].box.x && player.box.x < plattforms[i].box.x) {
+              player.velocity.x = 0;
+              player.x -= 4;
+              break;
+            } 
+          }
+
+          if(player.box.y + player.box.h > plattforms[i].y && player.box.y + player.box.h < plattforms[i].box.y + plattforms[i].box.h) {
+            player.y -=   player.box.h + player.box.y - plattforms[i].box.y; 
+            
           player.grounded = true;
-          player.velocity.y = 0;
+          
           player.x -= plattforms[i].changeX;
+          }
+          else if(player.box.y < plattforms[i].y + plattforms[i].h && player.box.y  > plattforms[i].box.y) 
+          {
+            player.y +=  player.y - plattforms[i].box.y + plattforms[i].box.h;
+            player.velocity.y *= -4;
+          }
+          
+          player.box.x = player.x;
+          player.box.y = player.y;
         }  
          
     }
+    if(!collision) {
+      player.grounded = false;
+    } 
     if(player.x <= 0)
     {
         player.x = 0;
@@ -355,12 +386,14 @@ function physicsEngine()
 
 function mainLoop()
 {
-      
-    collisionDetection();
+    if(!pause) { 
     physicsEngine();
+    collisionDetection();
     render();
-    controller.processControls();
-}
+    }
+      controller.processControls();
+    
+    }
 
 function movePlayer(direction) {
     player.velocity.x = Math.abs((player.velocity.x + direction*(acceleration))) <= terminal_velocity_x ? player.velocity.x + direction*(acceleration) : terminal_velocity_x*sgn(player.velocity.x);
@@ -381,8 +414,9 @@ function render()
 }
 function jump()
 {
-    if(player.grounded)
+    if(player.grounded && !isJumping)
     {
+        isJumping = true;
         player.y -=42;
         player.velocity.y = -5;
         player.grounded = false;
@@ -399,7 +433,7 @@ function userInput(event)
         controller.move(Inputs.RIGHT);
     else  if( event.key == 'ArrowLeft')
        controller.move(Inputs.LEFT);
-    else if (event.key == " ")
+    else if (event.key == " " && !isJumping)
     {
         controller.jump();
     }
@@ -415,6 +449,7 @@ function stopInput(event)
     else if(event.key == " ")
     {
         controller.cancelJump();
+        isJumping = false;
     }
     
 }
