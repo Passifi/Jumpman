@@ -150,56 +150,48 @@ class Plattform {
     }
 
 }
+
+class InputHandler {
+  keysDown = new Object();
+  constructor() {
+      for(let i =0; i< 120;i++) {
+        this.keysDown[String.fromCharCode(i)] = false;
+      }
+  }
+  keyDown(key) {
+
+    this.keysDown[key] = true;
+  }
+
+  keyUp(key) {
+    this.keysDown[key] = false;
+  } 
+
+}
+
+
 class Controller {
     
     constructor() {
-        this.pressLeft = false;
-        this.pressRight = false;
-        this.pressJump = false;
-        this.lastMovement = null;
-        this.jumped = false;
     }
 
-    move(direction)
-    {
-        if(direction==Inputs.LEFT)
-        {
-            this.pressLeft = true;
-            this.pressRight = false;
-        }
-        else if(direction=Inputs.RIGHT)
-        {
-            this.pressRight = true;
-            this.pressLeft = false;
-        }
 
-    }
-
-    jump()
+    processControls(inputs)
     {
-        this.pressJump = true;
-    }
-
-    cancelJump() 
-    {
-        this.pressJump = false;
-        this.jumped = false;
-    }
-
-    processControls()
-    {
-        if(this.pressLeft)
+        if(inputs.keysDown['a'])
         {
             movePlayer(-1);
         }
-        else if(this.pressRight)
+        if(inputs.keysDown['d'])
         {
             movePlayer(1);
         }
-        if(this.pressJump)
+        if(inputs.keysDown[' '])
         {
-
             jump();
+        }
+        else if(!inputs.keysDown[' ']) {
+          isJumping = false;
         }
 
     } 
@@ -209,7 +201,7 @@ class Controller {
 let player = new Player(20,screen.height-200,40,40,"#ff0f00");
 var plattforms = [];
 let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
-plattforms.push(new Plattform(120,screen.height-140,140,20,10,-2));
+plattforms.push(new Plattform(120,screen.height-140,140,20,-2));
 let coin = new Coin(700,200);
 plattforms.push(new Plattform(220,screen.height-270,120,10,1));
 plattforms.push(new Plattform(720,screen.height-300,120,10,-3));
@@ -222,7 +214,7 @@ plattforms.push(new Plattform(500,500,100,10,0));
 plattforms.push(floor);
 setInterval(mainLoop,1)
 controller = new Controller();
-
+inputHandler = new InputHandler();
 function sgn(num)
 {
     return num >= 0 ? 1 : -1;
@@ -236,39 +228,7 @@ function drawBox(x,y,w=player.width,h=player.height,color)
     ctx.fillStyle = orgColor;
 }
 
-function collision(box1, box2)
-{
-    // first check whether box1 slides into box2
-    let rightCollision = (box1.x + box1.w > box2.x) && (box1.x + box1.w < box2.x + box2.w);
-    let leftCollision = (box1.x < box2.x + box2.w) && (box1.x > box2.x );
-    let topCollision = (box1.y  + box1.h > box2.y) && (box1.y + box1.h < box2.y + box2.h);
-    let bottomCollision = (box1.y < box2.y + box2.h ) && (box1.y > box2.y );
-    let overlap = 0;
-    let overlapY = 0;
-    if(!(rightCollision && leftCollision) && (topCollision || bottomCollision))
-    {
-        if(rightCollision)
-        {
-            overlap = (box1.x + box1.w - box2.x);
-        }
-        else if(leftCollision) 
-        {
-            overlap = -1*( box2.x + box2.w - box1.x);
-        }
-    }
-    if(topCollision && (leftCollision || rightCollision))
-    {
-        
-        let topOver = box1.y+box1.h - box2.y;
-        if(bottomCollision)
-            topOver = 0
-        return [true,overlap,topOver];
-        
-    }
-
-}
-
-function improvedCollision(box1,box2) {
+function collision(box1,box2) {
  
 
  if(box1.x < box2.x + box2.w && box1.x + box1.w > box2.x && box1.y < box2.y + box2.h && box1.y + box1.h > box2.y) {
@@ -299,13 +259,13 @@ function collisionDetection()
 {
     player.box.x = player.x;
     player.box.y = player.y;
-    let collision = false;
+    let collided = false;
     for(let i =0; i < plattforms.length; i++)
     {
-        let res = improvedCollision(player.box,plattforms[i].box);
+        let res = collision(player.box,plattforms[i].box);
         
          if(res) {
-          collision = true;
+          collided = true;
           
           if(player.velocity.x > 0) {
             if(player.box.x + player.box.w > plattforms[i].box.x && player.box.x < plattforms[i].box.x) {
@@ -333,7 +293,7 @@ function collisionDetection()
         }  
          
     }
-    if(!collision) {
+    if(!collided) {
       player.grounded = false;
     } 
     if(player.x <= 0)
@@ -391,7 +351,7 @@ function mainLoop()
     collisionDetection();
     render();
     }
-      controller.processControls();
+      controller.processControls(inputHandler);
     
     }
 
@@ -429,27 +389,12 @@ function jump()
 
 function userInput(event) 
 {
-    if(event.key == 'ArrowRight')
-        controller.move(Inputs.RIGHT);
-    else  if( event.key == 'ArrowLeft')
-       controller.move(Inputs.LEFT);
-    else if (event.key == " " && !isJumping)
-    {
-        controller.jump();
-    }
+    inputHandler.keyDown(event.key); 
+    console.log(event.key.charCodeAt(0));
 }
 
 function stopInput(event)
 {
-    if(event.key == 'ArrowRight' || event.key == 'ArrowLeft')
-    {
-        controller.pressLeft = false;
-        controller.pressRight = false;
-    }
-    else if(event.key == " ")
-    {
-        controller.cancelJump();
-        isJumping = false;
-    }
+    inputHandler.keyUp(event.key);
     
 }
