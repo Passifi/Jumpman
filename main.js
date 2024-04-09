@@ -16,7 +16,7 @@ document.addEventListener('keyup', stopInput)
 let pause = false;
 const STEPSIZE = 3;
 const JUMPHEIGHT = 120;
-const MAX_VELOCITY = 10;
+const MAX_VELOCITY = 5;
 let horizontalDirection = 0;
 const screen = document.getElementById("screen");
 let touchingTheGround = false;
@@ -27,16 +27,16 @@ let terminal_velocity_y = 5;
 let x,y;
 const SCREEN_WIDTH = screen.width;
 const SCREEN_HEIGH = screen.height;
-let friction = 0.14;
+let friction = 0.38;
 let jumpCounter =0;
 document.getElementById("fricVal").textContent = friction;
 document.getElementById('friction').value = friction*100;
 document.getElementById("termVal").textContent = terminal_velocity_x;
 document.getElementById('terminal').value = terminal_velocity_x*5;
-let acceleration =3;
+let acceleration =1.2;
 let isJumping = false;
-
-
+let timer = 0;
+let lastTick =0;
 class HitBox {
     constructor(x,y,width,height)
     {
@@ -149,14 +149,12 @@ class Plattform {
         this.changeY = 0;
     }
 
-    move() {
-        this.x += this.speed;
-        if(this.x > SCREEN_WIDTH)
-            this.x = 0;
-        else if(this.x < 0)
-            this.x = SCREEN_WIDTH;
+    move(x) {
+        this.x += x;
+        this.velocity.x = this.x - this.lastX;
+        this.lastX = this.x;
         this.box.x = this.x;
-        this.box.y = this.y;
+        this.box.x = this.x;
         
     }
 
@@ -217,29 +215,50 @@ class Controller {
         }
 
     } 
-
+ ddd 
 
 }
 let player = new Player(20,screen.height-200,40,40,"#ff0f00");
 var plattforms = [];
-let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
-plattforms.push(new Plattform(120,screen.height-140,140,20,-2));
+var floors = [];
+//let floor = new Plattform(0,screen.height-20,screen.width,screen.width,0);
+plattforms.push(new Plattform(420,screen.height-140,140,20,1));
 let coin = new Coin(700,200);
 plattforms.push(new Plattform(220,screen.height-270,120,10,1));
-plattforms.push(new Plattform(720,screen.height-300,120,10,-3));
+plattforms.push(new Plattform(720,screen.height-300,120,10,2));
 
 plattforms.push(new Plattform(500,100,5,300,0));
 plattforms.push(new Plattform(500,500,100,10,0));
 
+floors.push(new Plattform(0,screen.height-20,800,20));
 
-
-plattforms.push(floor);
 setInterval(mainLoop,1)
 controller = new Controller();
 inputHandler = new InputHandler();
 function sgn(num)
 {
     return num >= 0 ? 1 : -1;
+}
+
+function spawnGround(force=false) {
+    if((timer - lastTick > 100) || force) {
+        floors.push(new Plattform(screen.width, screen.height-20, 300, 20,0));
+        lastTick = timer;
+    }
+}
+
+function handlePlattforms() {
+    spawnGround(false);
+    for(let i = 0; i < plattforms.length; i++) {
+        plattforms[i].move(-1);
+
+    } 
+    if(floors.length == 0) {
+        spawnGround(true);
+    }
+    for(let i = 0; i < floors.length; i++) {
+        floors[i].move(-4);
+    }
 }
 
 function drawBox(x,y,w=player.width,h=player.height,color)
@@ -282,31 +301,40 @@ function collisionDetection()
     player.box.x = player.x;
     player.box.y = player.y;
     let collided = false;
-    for(let i =0; i < plattforms.length; i++)
+    let allplatforms = floors.concat(plattforms);
+
+    for(let i =0; i < allplatforms.length; i++)
     {
-        let res = collision(player.box,plattforms[i].box);
+        let res = collision(player.box,allplatforms[i].box);
         
          if(res) {
           collided = true;
           
           if(player.velocity.x > 0) {
-            if(player.box.x + player.box.w > plattforms[i].box.x && player.box.x < plattforms[i].box.x) {
+            if(player.box.x + player.box.w > allplatforms[i].box.x && player.box.x < allplatforms[i].box.x) {
               player.velocity.x = 0;
               player.x -= 4;
               break;
             } 
           }
+          else if(player.velocity.x < 0) {
+            if(player.box.x  < allplatforms[i].box.x + allplatforms[i].box.w  && player.box.x + player.box.w > allplatforms[i].box.x + allplatforms[i].box.w) {
+                player.velocity.x = 0;
+                player.x += 4;
+                break;
+              } 
+          }
 
-          if(player.box.y + player.box.h > plattforms[i].y && player.box.y + player.box.h < plattforms[i].box.y + plattforms[i].box.h) {
-            player.y -=   player.box.h + player.box.y - plattforms[i].box.y; 
+          if(player.box.y + player.box.h > allplatforms[i].y && player.box.y + player.box.h < allplatforms[i].box.y + allplatforms[i].box.h) {
+            player.y -=   player.box.h + player.box.y - allplatforms[i].box.y; 
             
           player.grounded = true;
           
-          player.x -= plattforms[i].changeX;
+          player.x -= allplatforms[i].changeX;
           }
-          else if(player.box.y < plattforms[i].y + plattforms[i].h && player.box.y  > plattforms[i].box.y) 
+          else if(player.box.y < allplatforms[i].y + allplatforms[i].h && player.box.y  > allplatforms[i].box.y) 
           {
-            player.y +=  player.y - plattforms[i].box.y + plattforms[i].box.h;
+            player.y +=  player.y - allplatforms[i].box.y + allplatforms[i].box.h;
             player.velocity.y *= -4;
           }
           
@@ -368,7 +396,10 @@ function physicsEngine()
 
 function mainLoop()
 {
+
     if(!pause) { 
+    timer +=1
+    handlePlattforms();
     physicsEngine();
     collisionDetection();
     render();
@@ -378,7 +409,10 @@ function mainLoop()
     }
 
 function movePlayer(direction) {
-    player.velocity.x = Math.abs((player.velocity.x + direction*(acceleration))) <= terminal_velocity_x ? player.velocity.x + direction*(acceleration) : terminal_velocity_x*sgn(player.velocity.x);
+    let modifier = 1.0;
+    if(player.ground) modifier = 0.3;
+    player.velocity.x = Math.abs((player.velocity.x + direction*(acceleration)*modifier)) <= terminal_velocity_x ? player.velocity.x + direction*(acceleration)*modifier : terminal_velocity_x*sgn(player.velocity.x);
+    
 
 }
 
@@ -389,8 +423,10 @@ function render()
     drawBox(player.x,player.y,player.width,player.height,"#f303a3"); 
     plattforms.forEach(element => {
         drawBox(element.x,element.y,element.w,element.h,"#f0af33");
-        if(element.speed != 0)
-        element.oscilate();
+ 
+    });
+    floors.forEach(element => {
+        drawBox(element.x,element.y,element.w,element.h,"#0f0ff0");
     });
     coin.draw();
 }
