@@ -45,8 +45,30 @@ class HitBox {
         this.w = width;
         this.h = height;
     }
+    }
 
+
+class Pattern {
+
+  constructor() {
+    this.platforms = [];
+    this.enemies = [];
     
+  }
+
+  generatePattern(lastPattern,currentPosition) {
+    
+    if(lastPattern == null) {
+      // generate 3 plattforms 
+       
+      for(let i = 0; i < 3; i++) {
+        let yValue = Math.random() * screen.height;
+        
+        this.platforms.push(new Plattform(currentPosition.x += 20,yValue,100,20,1));
+      }
+    }
+  }
+
 }
 
 class Velocity
