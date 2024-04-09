@@ -95,11 +95,21 @@ class Player {
     
     applyVelocity() {
         this.x += this.velocity.x;
-        if(!this.grounded)
-            this.y += this.velocity.y;
-         
+        this.y += this.velocity.y; 
         if(Math.abs(this.velocity.x) < 0.001)
             this.velocity.x = 0;
+    
+      this.box.x = this.x;
+      this.box.y = this.y;
+    }
+
+    move(offsetX, offsetY) {
+      this.x += offsetX;
+      this.y += offsetY;
+
+     this.box.x = this.x;
+      this.box.y = this.y;
+
     }
         
 }
@@ -151,13 +161,24 @@ class Plattform {
 
     move(x) {
         this.x += x;
+        this.changeX = this.lastX - this.x;
+        this.changeY = this.lasY - this.y; 
+        this.lastY = this.y;
+        this.lastX = this.x;
         this.velocity.x = this.x - this.lastX;
         this.lastX = this.x;
         this.box.x = this.x;
         this.box.x = this.x;
-        
+            
     }
 
+    updateHitbox() {
+      this.box.x = this.x;
+      this.box.y = this.y; 
+      this.box.w = this.w;
+      this.box.h = this.h;
+    }
+    
     oscilate() 
     {
         this.time = (this.time+0.01)
@@ -215,7 +236,7 @@ class Controller {
         }
 
     } 
- ddd 
+
 
 }
 let player = new Player(20,screen.height-200,40,40,"#ff0f00");
@@ -227,7 +248,6 @@ let coin = new Coin(700,200);
 plattforms.push(new Plattform(220,screen.height-270,120,10,1));
 plattforms.push(new Plattform(720,screen.height-300,120,10,2));
 
-plattforms.push(new Plattform(500,100,5,300,0));
 plattforms.push(new Plattform(500,500,100,10,0));
 
 floors.push(new Plattform(0,screen.height-20,800,20));
@@ -240,10 +260,15 @@ function sgn(num)
     return num >= 0 ? 1 : -1;
 }
 
+let nextSpawn = 100;
+
 function spawnGround(force=false) {
-    if((timer - lastTick > 100) || force) {
-        floors.push(new Plattform(screen.width, screen.height-20, 300, 20,0));
-        lastTick = timer;
+    if((timer - lastTick > nextSpawn) || force) {
+       
+      let width = Math.random()*250 + 30;
+      floors.push(new Plattform(screen.width, screen.height-20, width, 20,0));
+      lastTick = timer;
+      newSpawn = Math.random()*100 + 50;
     }
 }
 
@@ -251,13 +276,18 @@ function handlePlattforms() {
     spawnGround(false);
     for(let i = 0; i < plattforms.length; i++) {
         plattforms[i].move(-1);
-
+        if(plattforms[i].x + plattforms[i].w < 0) {
+          plattforms[i].w = Math.random()*200 + 30;
+          plattforms[i].x += screen.width+ plattforms[i].w;
+          plattforms[i].y = Math.random()*screen.height - 100;
+          plattforms[i].updateHitbox();  
+        }
     } 
     if(floors.length == 0) {
         spawnGround(true);
     }
     for(let i = 0; i < floors.length; i++) {
-        floors[i].move(-4);
+        floors[i].move(-2);
     }
 }
 
@@ -326,7 +356,7 @@ function collisionDetection()
           }
 
           if(player.box.y + player.box.h > allplatforms[i].y && player.box.y + player.box.h < allplatforms[i].box.y + allplatforms[i].box.h) {
-            player.y -=   player.box.h + player.box.y - allplatforms[i].box.y; 
+            player.y -=   player.box.h + player.box.y - allplatforms[i].box.y+0.01; 
             
           player.grounded = true;
           
