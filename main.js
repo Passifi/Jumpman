@@ -57,6 +57,13 @@ class Velocity
         this.y = y;
     }
 }
+
+class Coord {
+  constructor(x,y){
+    this.x = x;
+    this.y = y;
+  }
+}
 class Player {
         constructor(x,y,width,height,color)
         {
@@ -68,7 +75,7 @@ class Player {
             this.velocity = new Velocity();
             this.grounded = false;
             this.box = new HitBox(this.x,this.y,width,height);
-            
+            this.lastPos = new Coord(this.x,this.y);           
         }
     
     applyVelocity() {
@@ -78,8 +85,20 @@ class Player {
          
         if(Math.abs(this.velocity.x) < 0.001)
             this.velocity.x = 0;
+        this.lastPos.x = this.x;
+        this.lastPos.y = this.y;
     }
-        
+
+    move(x=0,y=0) {
+        this.lastPos.x = this.x;
+        this.lastPos.y = this.y;
+        this.x += x;
+        this.y += y; 
+
+        this.box.x = this.x;
+        this.box.y = this.y;
+    }
+           
 }
 
 class Point {
@@ -91,8 +110,6 @@ class Point {
 }
 
 class Coin {
-
-
   constructor(x,y) {
     this.x = x;
     this.y = y;
@@ -108,8 +125,6 @@ class Coin {
     ctx.fillStyle = orgColor;
 } 
   }
-
-
 
 class Plattform {
     constructor(x,y,w,h,speed){
@@ -193,7 +208,6 @@ class Controller {
         }
 
     } 
- ddd 
 
 }
 let player = new Player(20,screen.height-200,40,40,"#ff0f00");
@@ -204,12 +218,9 @@ plattforms.push(new Plattform(420,screen.height-140,140,20,1));
 let coin = new Coin(700,200);
 plattforms.push(new Plattform(220,screen.height-270,120,10,1));
 plattforms.push(new Plattform(720,screen.height-300,120,10,2));
-
 plattforms.push(new Plattform(500,100,5,300,0));
 plattforms.push(new Plattform(500,500,100,10,0));
-
 floors.push(new Plattform(0,screen.height-20,800,20));
-
 setInterval(mainLoop,1)
 controller = new Controller();
 inputHandler = new InputHandler();
@@ -226,6 +237,7 @@ function spawnGround(force=false) {
 }
 
 function handlePlattforms() {
+    return;
     spawnGround(false);
     for(let i = 0; i < plattforms.length; i++) {
         plattforms[i].move(-1);
@@ -235,7 +247,7 @@ function handlePlattforms() {
         spawnGround(true);
     }
     for(let i = 0; i < floors.length; i++) {
-        floors[i].move(-4);
+        floors[i].move(-1);
     }
 }
 
@@ -274,6 +286,24 @@ function minOfList(x1,x2,x3,x4)
     return index; 
 }
 
+function sideCheck(box1, box2) {
+  if(box1.x + box1.w > box2.x && box1.x + box1.w < box2.x + box2.w) {
+    return true;
+  }
+  if(box1.x < box2.x + box2.w && box1.x > box2.x) {
+    return true;
+  }
+  return false;
+}
+function heightSideCheck(box1, box2) {
+  if(box1.y + box1.h > box2.y && box1.y + box1.h < box2.y + box2.h) {
+    return true;
+  }
+  if(box1.y < box2.y + box2.h && box1.y > box2.y) {
+    return true;
+  }
+  return false;
+}
 function collisionDetection() 
 {
     player.box.x = player.x;
@@ -287,18 +317,22 @@ function collisionDetection()
         
          if(res) {
           collided = true;
-          
-          if(player.velocity.x > 0) {
-            if(player.box.x + player.box.w > allplatforms[i].box.x && player.box.x < allplatforms[i].box.x) {
+          let oldHitbox = new HitBox(player.lastPos.x,player.lastPos.y);
+          let sideTest = sideCheck(oldHitbox,allplatforms[i].box);
+          if(!sideTest && player.velocity.x > 0) {
+            
+          if(player.box.x + player.box.w > allplatforms[i].box.x && player.box.x < allplatforms[i].box.x) {
+              
+              
               player.velocity.x = 0;
-              player.x -= 4;
+              player.move(-4);
               break;
             } 
           }
-          else if(player.velocity.x < 0) {
+          else if(sideTest && player.velocity.x < 0) {
             if(player.box.x  < allplatforms[i].box.x + allplatforms[i].box.w  && player.box.x + player.box.w > allplatforms[i].box.x + allplatforms[i].box.w) {
                 player.velocity.x = 0;
-                player.x += 4;
+                player.move(4)
                 break;
               } 
           }
